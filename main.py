@@ -34,7 +34,7 @@ playerLives = [(1,0,False,-1,False) for i in range(4)]
 
 # Enemy settings  
 enemy_width, enemy_height = 40, 30  
-enemy_speed = 4
+enemy_speed = 0.5
 enemies = [(width/2,-enemy_height,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
   
 # Bullet settings  
