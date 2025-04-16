@@ -21,7 +21,7 @@ WHITE = (255, 255, 255)
 
 # Load assets
 resources = {}
-assetDirs = ("bullet.png","enemy.png","life.png","rip.png")
+assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png")
 for i,key in enumerate(ResourceType):
     # so far only images need to be loaded, but later i'll need to add support for audio and that stuff
     resources[key] = pygame.image.load("data/images/"+assetDirs[i]).convert_alpha()
@@ -30,11 +30,11 @@ for i,key in enumerate(ResourceType):
 player_width, player_height = 50, 30  
 player_x, player_y = width // 2, height - 60  
 player_speed = 5  
-playerLives = [(0,0,False) for i in range(4)]
+playerLives = [(1,0,False,-1,False) for i in range(4)]
 
 # Enemy settings  
 enemy_width, enemy_height = 40, 30  
-enemy_speed = 0.5
+enemy_speed = 4
 enemies = [(width/2,-enemy_height,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
   
 # Bullet settings  
@@ -88,10 +88,14 @@ while running:
             ex += 1
         elif ex > width-enemy_width:
             ex -= 1
-        enemies[idx] = (ex, ey, ed)
 
-        # if ey > height-95 and ex :
-        #     if ex 
+        if ey > height-95 and ex:
+            for i in range(4):
+                if ex > 75+156.25*i and ex < 170+156.25*i and playerLives[i][0]==1:
+                    ey = height+500 # will delete the brick
+                    playerLives[i] = (0,playerLives[i][1],playerLives[i][2],playerLives[i][3],playerLives[i][4]) #this sucks
+                    break
+        enemies[idx] = (ex, ey, ed)
     #Clear enemies not in frame
     enemies = [enemy for enemy in enemies if enemy[1]<height+enemy_height]
 
@@ -99,18 +103,25 @@ while running:
     screen.fill(BLACK)  
     pygame.draw.rect(screen, WHITE, (player_x, player_y, player_width, player_height))
     # draw the lives
-    for i,(status,frame,goAFrameForward) in enumerate(playerLives):
+    for i,(status,frame,goAFrameForward,expldFrame,goAFrameForward2) in enumerate(playerLives):
         if status == 1:
             img = resources[ResourceType.IMAGE_LIFE]
         else:
             img = resources[ResourceType.IMAGE_RIP]
-            if frame==48:
-                playerLives[i] = (status, 0, False)
-            elif goAFrameForward:
-                playerLives[i] = (status, frame+1, False)
+            if expldFrame < 16 and goAFrameForward2:
+                expldFrame += 1
+                goAFrameForward2=False
             else:
-                playerLives[i] = (status, frame, True)
-        screen.blit(img, pygame.Rect(75+156.25*i,702,96,95),pygame.Rect(0+100*frame,0,100,100))
+                goAFrameForward2=True
+            if frame==48:
+                playerLives[i] = (status, 0, False, expldFrame,goAFrameForward2)
+            elif goAFrameForward:
+                playerLives[i] = (status, frame+1, False, expldFrame,goAFrameForward2)
+            else:
+                playerLives[i] = (status, frame, True, expldFrame,goAFrameForward2)
+        screen.blit(img, pygame.Rect(75+156.25*i,702,96,95),pygame.Rect(100*frame,0,100,100))
+        if expldFrame < 16 and expldFrame != -1: #it pains me to have the same if statement twice
+            screen.blit(resources[ResourceType.IMAGE_EXPLOSION], pygame.Rect(75+156.25*i,702,96,95),pygame.Rect(80*expldFrame,0,80,113))
     for ex, ey, ed in enemies:  
         screen.blit(resources[ResourceType.IMAGE_ENEMY], (ex, ey))
     for bullet in bullets:
