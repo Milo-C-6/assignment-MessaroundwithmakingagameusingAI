@@ -1,0 +1,6 @@
+__pycache__/
+venv/
+test.py
+*.kate-swp
+*.kra
+*.png~
