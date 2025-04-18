@@ -33,10 +33,17 @@ enemy_width, enemy_height = 64, 42
 enemy_speed = 0.5
 enemies = [(width/2,-enemy_height,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
   
+# Score stuff
+coolText = pygame.font.SysFont('Arial', 30)
+score = 0
+hitMarkers = [] #((posX,posY),amount,lifetime)
+
 # Other stuff
 playerLives = [(1,0,False,-1,False) for i in range(4)]
+livesPos = (75, 231.25, 387.5, 543.75)
 bullets = [Bullet()]  
-  
+
+
 # Game loop  
 running = True  
 while running:
@@ -49,18 +56,23 @@ while running:
             if pygame.mouse.get_pressed()[2]:
                 print(pygame.mouse.get_pos())
             
-        if pygame.mouse.get_pressed()[0] and pygame.mouse.get_pos()[1]>=500:
+        if pygame.mouse.get_pressed()[0] and pygame.mouse.get_pos()[1]>=500 and pygame.mouse.get_pos()[0]>=40 and pygame.mouse.get_pos()[0]<=width-40:
             bullets[-1].rect.center = pygame.mouse.get_pos()
 
         if event.type == pygame.MOUSEBUTTONUP:
             bullets[-1].velocity = numpy.divide(numpy.subtract((375,564), pygame.mouse.get_pos()),(8,8))
             bullets.append(Bullet())
-    # Update bullets  
-    for bullet in bullets:
+    # Update bullets
+    offsetI = 0  
+    for i,bullet in enumerate(bullets):
         bullet.update()
         bullet.texture = pygame.transform.rotate(resources[ResourceType.IMAGE_BULLET], bullet.rotation)
         bullet.rect = bullet.texture.get_rect(center = bullet.rect.center) 
-    bullets = [bullet for bullet in bullets if bullet.rect.bottom > 0 or bullet.rect.x > width or bullet.rect.x < 0]  #ohhh mah goodness its that simple???? I remember needing to do this before and having some complicated method that used only one for loop. I suppose mine might've been a bit more optimised though since it used one for loop, idk!!!!
+        if bullet.rect.bottom < 0 or bullet.rect.x > width or bullet.rect.x < 0:
+            score += bullet.multiplier*100
+            bullets.pop(i+offsetI)
+            offsetI -= 1
+    # bullets = [bullet for bullet in bullets if bullet.rect.bottom > 0 or bullet.rect.x > width or bullet.rect.x < 0] 
   
     # Enemy logic
 
@@ -73,10 +85,19 @@ while running:
     for idx, (ex, ey, ed) in enumerate(enemies): # oooh enumerate, i've never seen this before, pretty cool! 
         ey += enemy_speed
         if ed == 0:
-            if random.randint(0,70) == 0: # Chance of swaying
-                ed = random.randint(45,120)
-                if random.randint(0,1) == 0: # Left or right
-                    ed *= -1
+            if ey < 500:
+                if random.randint(0,70) == 0: # Chance of swaying
+                    ed = random.randint(45,120)
+                    if random.randint(0,1) == 0: # Left or right
+                        ed *= -1
+            else: # if its lower than 500 itll seek on specifc lives lives
+                distances = tuple(abs(pos-ex) for pos in livesPos)
+                id = distances.index(min(distances))
+                if ex > livesPos[id]:
+                    ed = -1
+                else:
+                    ed = 1
+
         else:
             if ed > 0:
                 ed -= 1
@@ -100,6 +121,9 @@ while running:
         collideId = pygame.Rect(ex,ey,enemy_width,enemy_height).collidelist(bulletRects)
         if collideId != -1:
             if tuple(bullets[collideId].velocity) != (0,0): #I'm not completely sure why but if I don't include the tuple() thing it gives me some cryptic value error
+                if not abs(ed) > 120:
+                    bullets[collideId].multiplier += 1
+                    hitMarkers.append(((ex,ey),100*bullets[collideId].multiplier,30)) #((posX,posY),amount,lifetime)
                 if bullets[collideId].velocity[0]>=0:
                     enemies[idx] = (ex, ey, 800)
                 else:
@@ -113,8 +137,11 @@ while running:
                     continue
         enemies[idx] = (ex, ey, ed)
     #Clear enemies not in frame
-    enemies = [enemy for enemy in enemies if enemy[1]<height+enemy_height]
-
+    enemies = [enemy for enemy in enemies if enemy[1]<height+enemy_height] #ohhh mah goodness its that simple???? I remember needing to do this before and having some complicated method that used only one for loop. I suppose mine might've been a bit more optimised though since it used one for loop, idk!!!!
+    # Hit marker logic
+    for i,marker in enumerate(hitMarkers):
+        hitMarkers[i] = ((marker[0][0],marker[0][1]-1),marker[1],marker[2]-1)
+    hitMarkers = [marker for marker in hitMarkers if marker[2] > 0]
     # Drawing  
     screen.fill(BLACK)  
     pygame.draw.rect(screen,WHITE,pygame.Rect(300,500,30,30))
@@ -146,8 +173,12 @@ while running:
     if bullets[-1].rect.y >= 450:
         pygame.draw.line(screen,WHITE,(347,500),(bullets[-1].rect.centerx,bullets[-1].rect.bottom))
         pygame.draw.line(screen,WHITE,(403,500),(bullets[-1].rect.centerx,bullets[-1].rect.bottom))
+    #draw score
+    for marker in hitMarkers:
+        screen.blit(coolText.render(str(marker[1]),True,WHITE),marker[0])
+    screen.blit(coolText.render(f"Score: {score}",True,WHITE),(0,0))
     pygame.display.flip()  
-  
+    
 # Quit Pygame  
 pygame.quit()  
 sys.exit()  

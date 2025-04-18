@@ -8,6 +8,7 @@ class Bullet:
         self.velocity = (0,0)
         self.rotation = 0
         self.texture = None
+        self.multiplier = 0
 
     def update(self):
         self.rect.move_ip(self.velocity)
