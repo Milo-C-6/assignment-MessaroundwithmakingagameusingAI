@@ -62,6 +62,15 @@ while running:
         if event.type == pygame.MOUSEBUTTONUP:
             bullets[-1].velocity = numpy.divide(numpy.subtract((375,564), pygame.mouse.get_pos()),(8,8))
             bullets.append(Bullet())
+
+    if 1 not in tuple(life[0] for life in playerLives):
+        endText = coolText.render(f"Game end",False,WHITE)
+        endScore = coolText.render(f"Score: {score}",False,WHITE)
+        screen.blit(endText,endText.get_rect(center=(width/2,height/2)))
+        screen.blit(endScore,endScore.get_rect(center=(width/2,height/2+80)))
+        pygame.display.update()
+        continue
+
     # Update bullets
     offsetI = 0  
     for i,bullet in enumerate(bullets):
