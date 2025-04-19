@@ -2,7 +2,7 @@
 Milo Cummings
 stupid pygame game inspired by mario 64 ds minigames and silly gifs me and my buddies send to eachother
 '''
-
+# TODO: Add more art stuff, maybe a main menu screen too, thatd be sick. also some audio, I dislike how silent it is
 import pygame  
 import sys  
 import random
@@ -30,7 +30,7 @@ for i,key in enumerate(ResourceType):
 
 # Enemy settings  
 enemy_width, enemy_height = 64, 42  
-enemy_speed = 0.5
+enemy_speed = 1
 enemies = [(width/2,-enemy_height,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
   
 # Score stuff
@@ -42,7 +42,7 @@ hitMarkers = [] #((posX,posY),amount,lifetime)
 playerLives = [(1,0,False,-1,False) for i in range(4)]
 livesPos = (75, 231.25, 387.5, 543.75)
 bullets = [Bullet()]  
-
+bulletOffsetPos = (0,0)
 
 # Game loop  
 running = True  
@@ -53,15 +53,17 @@ while running:
         if event.type == pygame.QUIT:  
             running = False  
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.mouse.get_pressed()[0]:
+                bulletOffsetPos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[2]:
                 print(pygame.mouse.get_pos())
-            
-        if pygame.mouse.get_pressed()[0] and pygame.mouse.get_pos()[1]>=500 and pygame.mouse.get_pos()[0]>=40 and pygame.mouse.get_pos()[0]<=width-40:
-            bullets[-1].rect.center = pygame.mouse.get_pos()
+        if len(bullets) > 0:
+            newCenter = numpy.subtract((375,564),numpy.subtract(bulletOffsetPos,pygame.mouse.get_pos()))
+            if pygame.mouse.get_pressed()[0] and newCenter[1]>=500 and newCenter[0]>=40 and newCenter[0]<=width-40 and tuple(bullets[-1].velocity) == (0,0):
+                bullets[-1].rect.center = newCenter
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            bullets[-1].velocity = numpy.divide(numpy.subtract((375,564), pygame.mouse.get_pos()),(8,8))
-            bullets.append(Bullet())
+            if event.type == pygame.MOUSEBUTTONUP and tuple(bullets[-1].velocity) == (0,0):
+                bullets[-1].velocity = numpy.divide(numpy.subtract((375,564), bullets[-1].rect.center),(8,8))
 
     if 1 not in tuple(life[0] for life in playerLives):
         endText = coolText.render(f"Game end",False,WHITE)
@@ -72,21 +74,21 @@ while running:
         continue
 
     # Update bullets
+    if len(bullets) == 0 or (tuple(bullets[-1].velocity) != (0,0) and bullets[-1].rect.y < 433):
+        bullets.append(Bullet())
     offsetI = 0  
     for i,bullet in enumerate(bullets):
         bullet.update()
         bullet.texture = pygame.transform.rotate(resources[ResourceType.IMAGE_BULLET], bullet.rotation)
         bullet.rect = bullet.texture.get_rect(center = bullet.rect.center) 
-        if bullet.rect.bottom < 0 or bullet.rect.x > width or bullet.rect.x < 0:
+        if bullet.rect.bottom < 0 or bullet.rect.x > width or bullet.rect.x < 0 or bullet.rect.y > height:
             score += bullet.multiplier*100
             bullets.pop(i+offsetI)
-            offsetI -= 1
-    # bullets = [bullet for bullet in bullets if bullet.rect.bottom > 0 or bullet.rect.x > width or bullet.rect.x < 0] 
-  
+            offsetI -= 1  
     # Enemy logic
 
     #Add Enemies
-    if random.randint(0,100)==0:
+    if random.randint(0,max(10,int(120-score/70)))==0:
         enemies.append((random.randint(50,700), -enemy_height, 0))
 
     #Move Enemies, and check if they're colliding with a life or a bullet
@@ -179,7 +181,7 @@ while running:
         screen.blit(resources[ResourceType.IMAGE_ENEMY], (ex, ey))
     for bullet in bullets:
         screen.blit(bullet.texture, bullet.rect)
-    if bullets[-1].rect.y >= 450:
+    if len(bullets) > 0 and bullets[-1].rect.y >= 435:
         pygame.draw.line(screen,WHITE,(347,500),(bullets[-1].rect.centerx,bullets[-1].rect.bottom))
         pygame.draw.line(screen,WHITE,(403,500),(bullets[-1].rect.centerx,bullets[-1].rect.bottom))
     #draw score

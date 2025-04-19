@@ -12,4 +12,5 @@ class Bullet:
 
     def update(self):
         self.rect.move_ip(self.velocity)
-        if self.velocity[1] != 0: self.velocity = numpy.add(self.velocity, (0,0.2)) # maybe I should add documentation because I have no clue what I wrote here
+        if tuple(self.velocity) != (0,0): self.velocity = numpy.add(self.velocity, (0,0.2)) # maybe I should add documentation because I have no clue what I wrote here
+        # ohhh this is the code to make it slowly fall, lets fix that
