@@ -7,7 +7,7 @@ class Bullet:
         self.rect = pygame.Rect(347,500,56,128)
         self.velocity = (0,0)
         self.rotation = 0
-        self.texture = None
+        self.texture = pygame.Surface((0,0))
         self.multiplier = 0
 
     def update(self):

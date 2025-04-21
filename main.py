@@ -23,26 +23,52 @@ WHITE = (255, 255, 255)
 
 # Load assets
 resources = {}
-assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png","slingshot.png")
+assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png","slingshot.png","logo.png")
 for i,key in enumerate(ResourceType):
     # so far only images need to be loaded, but later i'll need to add support for audio and that stuff
+    # what a joke, I dont want to add audio :D (unless I get feedback asking for such, then I will ig)
     resources[key] = pygame.image.load("data/images/"+assetDirs[i]).convert_alpha()
 
 # Enemy settings  
-enemy_width, enemy_height = 64, 42  
-enemy_speed = 1
-enemies = [(width/2,-enemy_height,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
+enemyWidth, enemyHeight = 64, 42  
+enemySpeed = 1
+enemies = [(width/2,-enemyHeight,0)] # [(100 + i * 60, 50, 0) for i in range(1)]  
   
 # Score stuff
 coolText = pygame.font.SysFont('Arial', 30)
 score = 0
 hitMarkers = [] #((posX,posY),amount,lifetime)
 
+# Main menu
+inMainMenu = True 
+mainMenuFrame = 0
+frameTick = 0
+
 # Other stuff
 playerLives = [(1,0,False,-1,False) for i in range(4)]
 livesPos = (75, 231.25, 387.5, 543.75)
 bullets = [Bullet()]  
 bulletOffsetPos = (0,0)
+
+# it felt a little wrong putting the main menu with the rest of the game loop so here it is here.
+#honestly if I were to rewrite this, I'd probably have a lot of this code here seperated into classes in dif .py files
+def mainMenu():
+    # Update
+    global frameTick # I'd use pygame.time.get_ticks() instead but its like weird. I can't really explain it, just try it yourself, replace frameTick with pygame.time.get_ticks() and you'll see.
+    global mainMenuFrame # oh main if only I had made this in a class, I wouldn't have to make these stupid global stuff
+    frameTick += 1
+    if frameTick%3==0:
+        mainMenuFrame+=1
+        if mainMenuFrame==8:
+            mainMenuFrame=0
+    #Draw
+    screen.fill(BLACK)
+    screen.blit(resources[ResourceType.IMAGE_LOGO],(33,200),pygame.Rect(0,77*mainMenuFrame,684,77))
+    command = coolText.render("CLICK TO START",True,WHITE)
+    if frameTick%4!=0:
+        screen.blit(command,command.get_rect(center=(width/2,600)))
+    pygame.display.flip()
+
 
 # Game loop  
 running = True  
@@ -53,6 +79,8 @@ while running:
         if event.type == pygame.QUIT:  
             running = False  
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if inMainMenu:
+                inMainMenu = False
             if pygame.mouse.get_pressed()[0]:
                 bulletOffsetPos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[2]:
@@ -64,6 +92,9 @@ while running:
 
             if event.type == pygame.MOUSEBUTTONUP and tuple(bullets[-1].velocity) == (0,0):
                 bullets[-1].velocity = numpy.divide(numpy.subtract((375,564), bullets[-1].rect.center),(8,8))
+    if inMainMenu:
+        mainMenu()
+        continue
 
     if 1 not in tuple(life[0] for life in playerLives):
         endText = coolText.render(f"Game end",False,WHITE)
@@ -91,12 +122,12 @@ while running:
 
     #Add Enemies
     if random.randint(0,max(10,int(120-score/70)))==0:
-        enemies.append((random.randint(50,700), -enemy_height, 0))
+        enemies.append((random.randint(50,700), -enemyHeight, 0))
 
     #Move Enemies, and check if they're colliding with a life or a bullet
     bulletRects = tuple(bullet.rect for bullet in bullets)
     for idx, (ex, ey, ed) in enumerate(enemies): # oooh enumerate, i've never seen this before, pretty cool! 
-        ey += enemy_speed
+        ey += enemySpeed
         if ed == 0:
             if ey < 500:
                 if random.randint(0,70) == 0: # Chance of swaying
@@ -129,9 +160,9 @@ while running:
 
         if ex < 0:
             ex += 1
-        elif ex > width-enemy_width:
+        elif ex > width-enemyWidth:
             ex -= 1
-        collideId = pygame.Rect(ex,ey,enemy_width,enemy_height).collidelist(bulletRects)
+        collideId = pygame.Rect(ex,ey,enemyWidth,enemyHeight).collidelist(bulletRects)
         if collideId != -1:
             if tuple(bullets[collideId].velocity) != (0,0): #I'm not completely sure why but if I don't include the tuple() thing it gives me some cryptic value error
                 if not abs(ed) > 120:
@@ -150,7 +181,7 @@ while running:
                     continue
         enemies[idx] = (ex, ey, ed)
     #Clear enemies not in frame
-    enemies = [enemy for enemy in enemies if enemy[1]<height+enemy_height] #ohhh mah goodness its that simple???? I remember needing to do this before and having some complicated method that used only one for loop. I suppose mine might've been a bit more optimised though since it used one for loop, idk!!!!
+    enemies = [enemy for enemy in enemies if enemy[1]<height+enemyHeight] #ohhh mah goodness its that simple???? I remember needing to do this before and having some complicated method that used only one for loop. I suppose mine might've been a bit more optimised though since it used one for loop, idk!!!!
     # Hit marker logic
     for i,marker in enumerate(hitMarkers):
         hitMarkers[i] = ((marker[0][0],marker[0][1]-1),marker[1],marker[2]-1)
