@@ -23,7 +23,7 @@ WHITE = (255, 255, 255)
 
 # Load assets
 resources = {}
-assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png")
+assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png","slingshot.png")
 for i,key in enumerate(ResourceType):
     # so far only images need to be loaded, but later i'll need to add support for audio and that stuff
     resources[key] = pygame.image.load("data/images/"+assetDirs[i]).convert_alpha()
@@ -79,6 +79,8 @@ while running:
     offsetI = 0  
     for i,bullet in enumerate(bullets):
         bullet.update()
+        if tuple(bullet.velocity) != (0,0):
+            bullet.rotation += 30
         bullet.texture = pygame.transform.rotate(resources[ResourceType.IMAGE_BULLET], bullet.rotation)
         bullet.rect = bullet.texture.get_rect(center = bullet.rect.center) 
         if bullet.rect.bottom < 0 or bullet.rect.x > width or bullet.rect.x < 0 or bullet.rect.y > height:
@@ -155,7 +157,6 @@ while running:
     hitMarkers = [marker for marker in hitMarkers if marker[2] > 0]
     # Drawing  
     screen.fill(BLACK)  
-    pygame.draw.rect(screen,WHITE,pygame.Rect(300,500,30,30))
     # draw the lives
     for i,(status,frame,goAFrameForward,expldFrame,goAFrameForward2) in enumerate(playerLives):
         if status == 1:
@@ -177,6 +178,7 @@ while running:
         if expldFrame < 16 and expldFrame != -1: #it pains me to have the same if statement twice
             screen.blit(resources[ResourceType.IMAGE_EXPLOSION], pygame.Rect(75+156.25*i,702,96,95),pygame.Rect(80*expldFrame,0,80,113))
     #draw other boring stuff
+    screen.blit(resources[ResourceType.IMAGE_SLINGSHOT], (345,490))
     for ex, ey, ed in enemies:  
         screen.blit(resources[ResourceType.IMAGE_ENEMY], (ex, ey))
     for bullet in bullets:

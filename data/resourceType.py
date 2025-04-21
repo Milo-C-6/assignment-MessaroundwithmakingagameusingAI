@@ -11,3 +11,4 @@ class ResourceType(enum.Enum):
     IMAGE_LIFE = 2
     IMAGE_RIP = 3
     IMAGE_EXPLOSION = 4
+    IMAGE_SLINGSHOT = 5
