@@ -23,11 +23,12 @@ WHITE = (255, 255, 255)
 
 # Load assets
 resources = {}
-assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png","slingshot.png","logo.png")
+assetDirs = ("bullet.png","enemy.png","life.png","rip.png","explosion.png","slingshot.png","logo.png","explode.mp3","hit.mp3")
 for i,key in enumerate(ResourceType):
-    # so far only images need to be loaded, but later i'll need to add support for audio and that stuff
-    # what a joke, I dont want to add audio :D (unless I get feedback asking for such, then I will ig)
-    resources[key] = pygame.image.load("data/images/"+assetDirs[i]).convert_alpha()
+    if str(key)[13:18]=="IMAGE":
+        resources[key] = pygame.image.load("data/images/"+assetDirs[i]).convert_alpha()
+    else: #only other resource is a sound
+        resources[key] = pygame.mixer.Sound("data/sounds/"+assetDirs[i])
 
 # Enemy settings  
 enemyWidth, enemyHeight = 64, 42  
@@ -80,6 +81,7 @@ while running:
             running = False  
         if event.type == pygame.MOUSEBUTTONDOWN:
             if inMainMenu:
+                pygame.mixer.Sound.play(resources[ResourceType.SOUND_EXPLODE])
                 inMainMenu = False
             if pygame.mouse.get_pressed()[0]:
                 bulletOffsetPos = pygame.mouse.get_pos()
@@ -121,7 +123,8 @@ while running:
     # Enemy logic
 
     #Add Enemies
-    if random.randint(0,max(10,int(120-score/70)))==0:
+    enemySpeed = min(9,1+score/1000)
+    if random.randint(0,max(10,int(120-score/40)))==0:
         enemies.append((random.randint(50,700), -enemyHeight, 0))
 
     #Move Enemies, and check if they're colliding with a life or a bullet
@@ -168,14 +171,18 @@ while running:
                 if not abs(ed) > 120:
                     bullets[collideId].multiplier += 1
                     hitMarkers.append(((ex,ey),100*bullets[collideId].multiplier,30)) #((posX,posY),amount,lifetime)
-                if bullets[collideId].velocity[0]>=0:
+                    pygame.mixer.Sound.play(resources[ResourceType.SOUND_HIT])
+                if bullets[collideId].velocity[0]>=0: #racket collideing
                     enemies[idx] = (ex, ey, 800)
+                    bullets[collideId].velocity = [-15,bullets[collideId].velocity[1]] 
                 else:
                     enemies[idx] = (ex, ey, -800)
+                    bullets[collideId].velocity = [15,bullets[collideId].velocity[1]] 
                 continue
         if ey > height-95 and ex:
             for i in range(4):
                 if ex > 75+156.25*i and ex < 170+156.25*i and playerLives[i][0]==1:
+                    pygame.mixer.Sound.play(resources[ResourceType.SOUND_EXPLODE])
                     ey = height+500 # will delete the brick
                     playerLives[i] = (0,playerLives[i][1],playerLives[i][2],playerLives[i][3],playerLives[i][4]) #this sucks
                     continue

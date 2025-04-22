@@ -6,7 +6,17 @@ Hitting bricks gives you points, you can get combos by hitting multiple bricks w
 ### Controls
 The game only uses the mouse, all you need to do is hold left click and the racket will follow the direction you move your mouse into. Once you release left click the racket fly off the slingshot.
 ## Peer review feedback
-will update on this tmrw ig
+Parker:
+    Add more balancing fixes, like speeding up the bricks
+Braeden:
+    Make it so the rackets can bounce off the bricks
+Zeke:
+    Add audio
+    make A sequal where the cats are attacking the bricks
+    make a triqual that has the multiverse
+    make a prequal where the cats are all friends
+
+anyway i added all of these, except the sequal, triqual, and prequal stuff zeke suggested
 ## AI Experience Reflection
 ### Pros
 i guess I always forget the first parts of making a pygame project, like including the pygame init, making the screen object, and setting the caption; So A.I. gave me that, but I think its way easier for me to just look in an older project or somewhere on the internet to get that instead.

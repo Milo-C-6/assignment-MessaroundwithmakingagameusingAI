@@ -13,3 +13,5 @@ class ResourceType(enum.Enum):
     IMAGE_EXPLOSION = 4
     IMAGE_SLINGSHOT = 5
     IMAGE_LOGO = 6
+    SOUND_EXPLODE = 7
+    SOUND_HIT = 8
